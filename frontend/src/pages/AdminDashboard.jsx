@@ -135,7 +135,17 @@ const AdminDashboard = () => {
                         </Badge>
                       </div>
                       <CardDescription className="text-base">
-                        Service: <span className="font-semibold text-gray-700">{booking.service}</span>
+                        {Array.isArray(booking.services) ? (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {booking.services.map((service, idx) => (
+                              <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[#3d6e3a] text-white">
+                                {service}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>Service: <span className="font-semibold text-gray-700">{booking.service || 'N/A'}</span></span>
+                        )}
                       </CardDescription>
                     </div>
                     <div className="text-right text-sm text-gray-500">

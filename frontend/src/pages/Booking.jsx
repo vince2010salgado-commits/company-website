@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Checkbox } from '../components/ui/checkbox';
 import { CheckCircle2, Phone, Mail } from 'lucide-react';
 import { services, companyInfo } from '../mock';
 import { useToast } from '../hooks/use-toast';
@@ -15,7 +15,7 @@ const Booking = () => {
     name: '',
     email: '',
     phone: '',
-    service: '',
+    services: [],
     message: ''
   });
 
@@ -25,8 +25,28 @@ const Booking = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleServiceToggle = (serviceName) => {
+    setFormData(prev => {
+      const services = prev.services.includes(serviceName)
+        ? prev.services.filter(s => s !== serviceName)
+        : [...prev.services, serviceName];
+      return { ...prev, services };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate that at least one service is selected
+    if (formData.services.length === 0) {
+      toast({
+        title: "Please select at least one service",
+        description: "You must choose at least one service to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Simulate API call
@@ -52,7 +72,7 @@ const Booking = () => {
         name: '',
         email: '',
         phone: '',
-        service: '',
+        services: [],
         message: ''
       });
       setIsSubmitting(false);
@@ -124,20 +144,31 @@ const Booking = () => {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="service">Service Needed *</Label>
-                      <Select value={formData.service} onValueChange={(value) => handleChange('service', value)} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a service" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {services.map((service) => (
-                            <SelectItem key={service.id} value={service.name}>
-                              {service.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-3">
+                      <Label>Services Needed * <span className="text-sm text-gray-500">(Select all that apply)</span></Label>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {services.map((service) => (
+                          <div key={service.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:border-[#3d6e3a] transition-colors">
+                            <Checkbox
+                              id={`service-${service.id}`}
+                              checked={formData.services.includes(service.name)}
+                              onCheckedChange={() => handleServiceToggle(service.name)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <Label
+                                htmlFor={`service-${service.id}`}
+                                className="font-semibold cursor-pointer"
+                              >
+                                {service.name}
+                              </Label>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {service.description.split('.')[0]}.
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
