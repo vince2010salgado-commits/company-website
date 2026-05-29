@@ -59,12 +59,17 @@ const Home = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-[#3d6e3a] to-[#5fa85c] rounded-3xl shadow-2xl flex items-center justify-center text-white">
-                <div className="text-center p-8">
-                  <Droplets className="w-24 h-24 mx-auto mb-4 opacity-90" />
-                  <h3 className="text-2xl font-bold mb-2">Transform Your Property</h3>
-                  <p className="text-gray-100">Professional care you can trust</p>
-                </div>
+              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden bg-white border-4 border-[#3d6e3a]">
+                <div
+                  className="w-full h-full"
+                  style={{
+                    backgroundImage: "url('https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/1w2q0xue_image.png')",
+                    backgroundSize: '200% 200%',
+                    backgroundPosition: 'top left',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                  aria-label="Fresh Start Property Care logo"
+                />
               </div>
             </div>
           </div>
