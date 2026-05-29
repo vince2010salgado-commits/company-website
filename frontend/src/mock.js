@@ -112,45 +112,30 @@ export const testimonials = [
 export const galleryItems = [
   {
     id: 1,
-    service: "Power Washing",
-    description: "Driveway transformation",
-    beforeText: "Dirty, stained driveway",
-    afterText: "Clean, restored surface"
+    service: "Gutter Cleaning",
+    description: "Backyard valley & gutter cleanout",
+    type: "pair",
+    beforeImage: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/vne7tpi8_image.png",
+    afterImage: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/8g57oxyv_image.png",
+    beforeText: "Leaves & debris piled in the roof valley",
+    afterText: "Cleared, free-flowing gutters"
   },
   {
     id: 2,
-    service: "Landscaping",
-    description: "Front yard makeover",
-    beforeText: "Overgrown lawn and weeds",
-    afterText: "Manicured landscape"
+    service: "Gutter Cleaning",
+    description: "Side gutter line restoration",
+    type: "collage",
+    image: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/cdexdreh_image.png",
+    beforeText: "Clogged with leaves & debris",
+    afterText: "Spotless and clear"
   },
   {
     id: 3,
-    service: "Gutter Cleaning",
-    description: "Gutter debris removal",
-    beforeText: "Clogged with leaves and debris",
-    afterText: "Clean, flowing gutters"
-  },
-  {
-    id: 4,
-    service: "Power Washing",
-    description: "Sidewalk cleaning",
-    beforeText: "Stained concrete walkway",
-    afterText: "Spotless pathway"
-  },
-  {
-    id: 5,
     service: "Junk Removal",
-    description: "Property cleanout",
-    beforeText: "Cluttered yard space",
-    afterText: "Clean, usable area"
-  },
-  {
-    id: 6,
-    service: "Landscaping",
-    description: "Backyard refresh",
-    beforeText: "Unkempt grass and bushes",
-    afterText: "Beautiful outdoor space"
+    description: "Full yard waste haul-away",
+    type: "single",
+    image: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/zk473bsi_image.png",
+    afterText: "Bagged, organized & ready for disposal"
   }
 ];
 
