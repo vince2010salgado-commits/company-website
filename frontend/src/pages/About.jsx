@@ -10,29 +10,16 @@ const About = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                About Fresh Start Property Care
-              </h1>
-              <p className="text-xl text-gray-600 mb-6">
-                {companyInfo.tagline}
-              </p>
-              <p className="text-lg text-gray-700">
-                We're a local property care company based in {companyInfo.location}, dedicated to helping homeowners maintain beautiful, well-kept properties. Founded by {companyInfo.owners}, we bring professionalism, quality, and care to every job.
-              </p>
-            </div>
-            <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-[#3d6e3a] to-[#5fa85c] rounded-3xl shadow-2xl flex items-center justify-center text-white">
-                <div className="text-center p-8">
-                  <Users className="w-24 h-24 mx-auto mb-4 opacity-90" />
-                  <h3 className="text-2xl font-bold mb-2">{companyInfo.owners}</h3>
-                  <p className="text-gray-100">Owners / Operators</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            About Fresh Start Property Care
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">
+            {companyInfo.tagline}
+          </p>
+          <p className="text-lg text-gray-700">
+            We're a local property care company based in {companyInfo.location}, dedicated to helping homeowners maintain beautiful, well-kept properties. Founded by {companyInfo.owners}, we bring professionalism, quality, and care to every job.
+          </p>
         </div>
       </section>
 
