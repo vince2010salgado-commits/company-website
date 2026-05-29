@@ -58,19 +58,12 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            <div className="relative">
-              <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden bg-white border-4 border-[#3d6e3a]">
-                <div
-                  className="w-full h-full"
-                  style={{
-                    backgroundImage: "url('https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/1w2q0xue_image.png')",
-                    backgroundSize: '200% 200%',
-                    backgroundPosition: 'top left',
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                  aria-label="Fresh Start Property Care logo"
-                />
-              </div>
+            <div className="relative flex items-center justify-center">
+              <img
+                src="https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/1w2q0xue_image.png"
+                alt="Fresh Start Property Care logo"
+                className="w-full max-w-md h-auto rounded-2xl shadow-2xl"
+              />
             </div>
           </div>
         </div>

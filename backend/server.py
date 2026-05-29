@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,8 +8,10 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from bson import ObjectId
+import bcrypt
+import jwt
 
 
 ROOT_DIR = Path(__file__).parent
@@ -49,6 +51,10 @@ class BookingCreate(BaseModel):
 class BookingUpdate(BaseModel):
     status: str
 
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
 # Helper function to convert MongoDB document to dict
 def booking_helper(booking) -> dict:
     return {
@@ -63,6 +69,45 @@ def booking_helper(booking) -> dict:
         "createdAt": booking.get("createdAt"),
         "updatedAt": booking.get("updatedAt")
     }
+
+
+# ===== Auth helpers =====
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRY_HOURS = 24 * 7  # 1 week
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+def create_access_token(email: str) -> str:
+    payload = {
+        "sub": email,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRY_HOURS),
+        "type": "access"
+    }
+    return jwt.encode(payload, os.environ["JWT_SECRET"], algorithm=JWT_ALGORITHM)
+
+async def get_current_admin(request: Request):
+    """Dependency to verify admin JWT token from Authorization header."""
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = auth_header[7:]
+    try:
+        payload = jwt.decode(token, os.environ["JWT_SECRET"], algorithms=[JWT_ALGORITHM])
+        email = payload.get("sub")
+        if not email or payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid token")
+        admin = await db.admins.find_one({"email": email})
+        if not admin:
+            raise HTTPException(status_code=401, detail="Admin not found")
+        return {"email": admin["email"]}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
@@ -97,7 +142,7 @@ async def get_status_checks():
 # Booking Routes
 @api_router.post("/bookings", status_code=201)
 async def create_booking(booking: BookingCreate):
-    """Create a new booking request"""
+    """Create a new booking request (PUBLIC - no auth required)"""
     # Validate at least one service is selected
     if not booking.services or len(booking.services) == 0:
         raise HTTPException(status_code=400, detail="At least one service must be selected")
@@ -123,8 +168,8 @@ async def create_booking(booking: BookingCreate):
 
 
 @api_router.get("/bookings")
-async def get_bookings(status: Optional[str] = None):
-    """Get all bookings with optional status filter"""
+async def get_bookings(status: Optional[str] = None, admin: dict = Depends(get_current_admin)):
+    """Get all bookings (ADMIN ONLY)"""
     query = {}
     if status and status in ["pending", "approved", "completed", "declined"]:
         query["status"] = status
@@ -139,8 +184,8 @@ async def get_bookings(status: Optional[str] = None):
 
 
 @api_router.patch("/bookings/{booking_id}")
-async def update_booking_status(booking_id: str, booking_update: BookingUpdate):
-    """Update booking status (admin action)"""
+async def update_booking_status(booking_id: str, booking_update: BookingUpdate, admin: dict = Depends(get_current_admin)):
+    """Update booking status (ADMIN ONLY)"""
     # Validate status
     valid_statuses = ["pending", "approved", "completed", "declined"]
     if booking_update.status not in valid_statuses:
@@ -177,8 +222,8 @@ async def update_booking_status(booking_id: str, booking_update: BookingUpdate):
 
 
 @api_router.delete("/bookings/{booking_id}")
-async def delete_booking(booking_id: str):
-    """Delete a booking (admin action)"""
+async def delete_booking(booking_id: str, admin: dict = Depends(get_current_admin)):
+    """Delete a booking (ADMIN ONLY)"""
     # Validate ObjectId
     try:
         obj_id = ObjectId(booking_id)
@@ -195,6 +240,59 @@ async def delete_booking(booking_id: str):
         "success": True,
         "message": "Booking deleted successfully"
     }
+
+
+# ===== Auth Routes =====
+@api_router.post("/auth/login")
+async def admin_login(credentials: LoginRequest):
+    """Admin login - returns JWT token"""
+    email = credentials.email.lower()
+    admin = await db.admins.find_one({"email": email})
+    if not admin or not verify_password(credentials.password, admin["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    token = create_access_token(email)
+    return {
+        "success": True,
+        "token": token,
+        "admin": {"email": email}
+    }
+
+
+@api_router.get("/auth/me")
+async def get_me(admin: dict = Depends(get_current_admin)):
+    """Verify current admin session"""
+    return {"success": True, "admin": admin}
+
+
+# ===== Startup: seed admin =====
+async def seed_admin():
+    """Create or update admin user on startup (idempotent)"""
+    admin_email = os.environ.get("ADMIN_EMAIL", "").lower()
+    admin_password = os.environ.get("ADMIN_PASSWORD", "")
+    if not admin_email or not admin_password:
+        logger.warning("ADMIN_EMAIL or ADMIN_PASSWORD missing - skipping admin seed")
+        return
+    
+    existing = await db.admins.find_one({"email": admin_email})
+    if existing is None:
+        await db.admins.insert_one({
+            "email": admin_email,
+            "password_hash": hash_password(admin_password),
+            "created_at": datetime.now(timezone.utc)
+        })
+        logger.info(f"Created admin account: {admin_email}")
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await db.admins.update_one(
+            {"email": admin_email},
+            {"$set": {"password_hash": hash_password(admin_password)}}
+        )
+        logger.info(f"Updated admin password: {admin_email}")
+
+
+@app.on_event("startup")
+async def startup_event():
+    await seed_admin()
 
 # Include the router in the main app
 app.include_router(api_router)

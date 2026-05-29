@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { CheckCircle2, XCircle, Trash2, Calendar, Phone, Mail, MessageSquare, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Trash2, Calendar, Phone, Mail, MessageSquare, Loader2, LogOut } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -12,23 +13,48 @@ const API = `${BACKEND_URL}/api`;
 
 const AdminDashboard = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('adminToken');
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  const handleAuthError = (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminEmail');
+      navigate('/admin/login');
+      return true;
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminEmail');
+    toast({ title: 'Logged out', description: 'See you next time!' });
+    navigate('/admin/login');
+  };
+
   // Fetch bookings on component mount
   useEffect(() => {
     fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API}/bookings`);
+      const response = await axios.get(`${API}/bookings`, { headers: getAuthHeaders() });
       if (response.data.success) {
         setBookings(response.data.bookings);
       }
     } catch (error) {
+      if (handleAuthError(error)) return;
       console.error('Error fetching bookings:', error);
       toast({
         title: "Error",
@@ -42,9 +68,11 @@ const AdminDashboard = () => {
 
   const updateBookingStatus = async (id, newStatus) => {
     try {
-      const response = await axios.patch(`${API}/bookings/${id}`, {
-        status: newStatus
-      });
+      const response = await axios.patch(
+        `${API}/bookings/${id}`,
+        { status: newStatus },
+        { headers: getAuthHeaders() }
+      );
       
       if (response.data.success) {
         // Update local state
@@ -60,6 +88,7 @@ const AdminDashboard = () => {
         });
       }
     } catch (error) {
+      if (handleAuthError(error)) return;
       console.error('Error updating booking:', error);
       toast({
         title: "Error",
@@ -71,7 +100,7 @@ const AdminDashboard = () => {
 
   const deleteBooking = async (id) => {
     try {
-      const response = await axios.delete(`${API}/bookings/${id}`);
+      const response = await axios.delete(`${API}/bookings/${id}`, { headers: getAuthHeaders() });
       
       if (response.data.success) {
         // Remove from local state
@@ -83,6 +112,7 @@ const AdminDashboard = () => {
         });
       }
     } catch (error) {
+      if (handleAuthError(error)) return;
       console.error('Error deleting booking:', error);
       toast({
         title: "Error",
@@ -118,8 +148,21 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-br from-[#3d6e3a] to-[#2d5e2a] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-gray-100">Manage your bookings and appointments</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+              <p className="text-gray-100">Manage your bookings and appointments</p>
+            </div>
+            <Button
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-[#3d6e3a]"
+              onClick={handleLogout}
+              data-testid="admin-logout-btn"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
