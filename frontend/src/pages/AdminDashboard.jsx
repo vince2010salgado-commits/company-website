@@ -1,47 +1,95 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { CheckCircle2, XCircle, Clock, Trash2, Calendar, Phone, Mail, MessageSquare } from 'lucide-react';
-import { mockBookings } from '../mock';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { CheckCircle2, XCircle, Trash2, Calendar, Phone, Mail, MessageSquare, Loader2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch bookings on component mount
   useEffect(() => {
-    // Load bookings from localStorage (mock data)
-    const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    // Combine with initial mock bookings
-    const allBookings = [...mockBookings, ...storedBookings];
-    setBookings(allBookings);
+    fetchBookings();
   }, []);
 
-  const updateBookingStatus = (id, newStatus) => {
-    const updatedBookings = bookings.map(booking =>
-      booking.id === id ? { ...booking, status: newStatus } : booking
-    );
-    setBookings(updatedBookings);
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
-    
-    toast({
-      title: "Status Updated",
-      description: `Booking #${id} marked as ${newStatus}`,
-    });
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`${API}/bookings`);
+      if (response.data.success) {
+        setBookings(response.data.bookings);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load bookings. Please refresh the page.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteBooking = (id) => {
-    const updatedBookings = bookings.filter(booking => booking.id !== id);
-    setBookings(updatedBookings);
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
-    
-    toast({
-      title: "Booking Deleted",
-      description: `Booking #${id} has been removed`,
-    });
+  const updateBookingStatus = async (id, newStatus) => {
+    try {
+      const response = await axios.patch(`${API}/bookings/${id}`, {
+        status: newStatus
+      });
+      
+      if (response.data.success) {
+        // Update local state
+        setBookings(prevBookings =>
+          prevBookings.map(booking =>
+            booking.id === id ? { ...booking, status: newStatus } : booking
+          )
+        );
+        
+        toast({
+          title: "Status Updated",
+          description: `Booking marked as ${newStatus}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update booking status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteBooking = async (id) => {
+    try {
+      const response = await axios.delete(`${API}/bookings/${id}`);
+      
+      if (response.data.success) {
+        // Remove from local state
+        setBookings(prevBookings => prevBookings.filter(booking => booking.id !== id));
+        
+        toast({
+          title: "Booking Deleted",
+          description: "Booking has been removed",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete booking",
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredBookings = filter === 'all' 
@@ -114,28 +162,35 @@ const AdminDashboard = () => {
           </TabsList>
         </Tabs>
 
-        {/* Bookings List */}
-        <div className="space-y-4">
-          {filteredBookings.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-gray-500">
-                No bookings found
-              </CardContent>
-            </Card>
-          ) : (
-            filteredBookings.map((booking) => (
-              <Card key={booking.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-xl">{booking.name}</CardTitle>
-                        <Badge className={`${getStatusBadge(booking.status)} text-white`}>
-                          {booking.status.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-base">
-                        {Array.isArray(booking.services) ? (
+        {/* Loading State */}
+        {isLoading ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#3d6e3a] mb-4" />
+              <p className="text-gray-500">Loading bookings...</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredBookings.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center text-gray-500">
+                  No bookings found
+                </CardContent>
+              </Card>
+            ) : (
+              filteredBookings.map((booking) => (
+                <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <CardTitle className="text-xl">{booking.name}</CardTitle>
+                          <Badge className={`${getStatusBadge(booking.status)} text-white`}>
+                            {booking.status.toUpperCase()}
+                          </Badge>
+                        </div>
+                        <CardDescription className="text-base">
                           <div className="flex flex-wrap gap-2 mt-2">
                             {booking.services.map((service, idx) => (
                               <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-[#3d6e3a] text-white">
@@ -143,100 +198,104 @@ const AdminDashboard = () => {
                               </span>
                             ))}
                           </div>
-                        ) : (
-                          <span>Service: <span className="font-semibold text-gray-700">{booking.service || 'N/A'}</span></span>
-                        )}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right text-sm text-gray-500">
-                      <div className="flex items-center justify-end gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(booking.createdAt).toLocaleDateString()}
+                        </CardDescription>
                       </div>
-                      <div className="text-xs mt-1">
-                        {new Date(booking.createdAt).toLocaleTimeString()}
+                      <div className="text-right text-sm text-gray-500">
+                        <div className="flex items-center justify-end gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(booking.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs mt-1">
+                          {new Date(booking.createdAt).toLocaleTimeString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm">
-                        <Phone className="w-4 h-4 mr-2 text-[#3d6e3a]" />
-                        <a href={`tel:${booking.phone}`} className="hover:text-[#3d6e3a] transition-colors">
-                          {booking.phone}
-                        </a>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <Phone className="w-4 h-4 mr-2 text-[#3d6e3a]" />
+                          <a href={`tel:${booking.phone}`} className="hover:text-[#3d6e3a] transition-colors">
+                            {booking.phone}
+                          </a>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Mail className="w-4 h-4 mr-2 text-[#3d6e3a]" />
+                          <a href={`mailto:${booking.email}`} className="hover:text-[#3d6e3a] transition-colors">
+                            {booking.email}
+                          </a>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm">
-                        <Mail className="w-4 h-4 mr-2 text-[#3d6e3a]" />
-                        <a href={`mailto:${booking.email}`} className="hover:text-[#3d6e3a] transition-colors">
-                          {booking.email}
-                        </a>
-                      </div>
+                      {booking.message && (
+                        <div className="flex items-start">
+                          <MessageSquare className="w-4 h-4 mr-2 text-[#3d6e3a] flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-gray-700 italic">"{booking.message}"</p>
+                        </div>
+                      )}
                     </div>
-                    {booking.message && (
-                      <div className="flex items-start">
-                        <MessageSquare className="w-4 h-4 mr-2 text-[#3d6e3a] flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-700 italic">"{booking.message}"</p>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2 pt-4 border-t">
-                    {booking.status === 'pending' && (
-                      <>
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t">
+                      {booking.status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => updateBookingStatus(booking.id, 'approved')}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-600 text-red-600 hover:bg-red-50"
+                            onClick={() => updateBookingStatus(booking.id, 'declined')}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Decline
+                          </Button>
+                        </>
+                      )}
+                      {booking.status === 'approved' && (
                         <Button
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => updateBookingStatus(booking.id, 'approved')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => updateBookingStatus(booking.id, 'completed')}
                         >
                           <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Approve
+                          Mark Completed
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-600 text-red-600 hover:bg-red-50"
-                          onClick={() => updateBookingStatus(booking.id, 'declined')}
-                        >
+                      )}
+                      {booking.status === 'completed' && (
+                        <Badge className="bg-blue-500 text-white">
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          Service Completed
+                        </Badge>
+                      )}
+                      {booking.status === 'declined' && (
+                        <Badge className="bg-red-500 text-white">
                           <XCircle className="w-4 h-4 mr-1" />
-                          Decline
-                        </Button>
-                      </>
-                    )}
-                    {booking.status === 'approved' && (
+                          Declined
+                        </Badge>
+                      )}
                       <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => updateBookingStatus(booking.id, 'completed')}
+                        variant="ghost"
+                        className="text-red-600 hover:bg-red-50 ml-auto"
+                        onClick={() => deleteBooking(booking.id)}
                       >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Mark Completed
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
                       </Button>
-                    )}
-                    {booking.status === 'completed' && (
-                      <Badge className="bg-blue-500 text-white">
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Service Completed
-                      </Badge>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-600 hover:bg-red-50 ml-auto"
-                      onClick={() => deleteBooking(booking.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

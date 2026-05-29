@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -8,6 +9,9 @@ import { Checkbox } from '../components/ui/checkbox';
 import { CheckCircle2, Phone, Mail } from 'lucide-react';
 import { services, companyInfo } from '../mock';
 import { useToast } from '../hooks/use-toast';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Booking = () => {
   const { toast } = useToast();
@@ -49,34 +53,35 @@ const Booking = () => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Store in localStorage for mock admin dashboard
-      const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      const newBooking = {
-        id: Date.now(),
-        ...formData,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        date: null
-      };
-      bookings.push(newBooking);
-      localStorage.setItem('bookings', JSON.stringify(bookings));
+    try {
+      // Make API call to backend
+      const response = await axios.post(`${API}/bookings`, formData);
+      
+      if (response.data.success) {
+        toast({
+          title: "Request Submitted!",
+          description: "We'll contact you within 24 hours with a free estimate.",
+        });
 
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          services: [],
+          message: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error);
       toast({
-        title: "Request Submitted!",
-        description: "We'll contact you within 24 hours with a free estimate.",
+        title: "Submission Failed",
+        description: error.response?.data?.detail || "There was an error submitting your request. Please try again.",
+        variant: "destructive"
       });
-
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        services: [],
-        message: ''
-      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (

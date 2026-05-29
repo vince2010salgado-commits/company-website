@@ -1,14 +1,15 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+from bson import ObjectId
 
 
 ROOT_DIR = Path(__file__).parent
@@ -36,6 +37,32 @@ class StatusCheck(BaseModel):
 
 class StatusCheckCreate(BaseModel):
     client_name: str
+
+# Booking Models
+class BookingCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    services: List[str]
+    message: Optional[str] = ""
+
+class BookingUpdate(BaseModel):
+    status: str
+
+# Helper function to convert MongoDB document to dict
+def booking_helper(booking) -> dict:
+    return {
+        "id": str(booking["_id"]),
+        "name": booking["name"],
+        "email": booking["email"],
+        "phone": booking["phone"],
+        "services": booking["services"],
+        "message": booking.get("message", ""),
+        "status": booking.get("status", "pending"),
+        "date": booking.get("date"),
+        "createdAt": booking.get("createdAt"),
+        "updatedAt": booking.get("updatedAt")
+    }
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
@@ -65,6 +92,109 @@ async def get_status_checks():
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     
     return status_checks
+
+
+# Booking Routes
+@api_router.post("/bookings", status_code=201)
+async def create_booking(booking: BookingCreate):
+    """Create a new booking request"""
+    # Validate at least one service is selected
+    if not booking.services or len(booking.services) == 0:
+        raise HTTPException(status_code=400, detail="At least one service must be selected")
+    
+    # Create booking document
+    booking_dict = booking.model_dump()
+    booking_dict["status"] = "pending"
+    booking_dict["createdAt"] = datetime.now(timezone.utc)
+    booking_dict["updatedAt"] = datetime.now(timezone.utc)
+    booking_dict["date"] = None
+    
+    # Insert into database
+    result = await db.bookings.insert_one(booking_dict)
+    
+    # Fetch the created booking
+    created_booking = await db.bookings.find_one({"_id": result.inserted_id})
+    
+    return {
+        "success": True,
+        "message": "Booking request submitted successfully",
+        "booking": booking_helper(created_booking)
+    }
+
+
+@api_router.get("/bookings")
+async def get_bookings(status: Optional[str] = None):
+    """Get all bookings with optional status filter"""
+    query = {}
+    if status and status in ["pending", "approved", "completed", "declined"]:
+        query["status"] = status
+    
+    bookings = await db.bookings.find(query).sort("createdAt", -1).to_list(1000)
+    
+    return {
+        "success": True,
+        "count": len(bookings),
+        "bookings": [booking_helper(booking) for booking in bookings]
+    }
+
+
+@api_router.patch("/bookings/{booking_id}")
+async def update_booking_status(booking_id: str, booking_update: BookingUpdate):
+    """Update booking status (admin action)"""
+    # Validate status
+    valid_statuses = ["pending", "approved", "completed", "declined"]
+    if booking_update.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+    
+    # Validate ObjectId
+    try:
+        obj_id = ObjectId(booking_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid booking ID")
+    
+    # Update booking
+    result = await db.bookings.update_one(
+        {"_id": obj_id},
+        {
+            "$set": {
+                "status": booking_update.status,
+                "updatedAt": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Fetch updated booking
+    updated_booking = await db.bookings.find_one({"_id": obj_id})
+    
+    return {
+        "success": True,
+        "message": "Booking status updated successfully",
+        "booking": booking_helper(updated_booking)
+    }
+
+
+@api_router.delete("/bookings/{booking_id}")
+async def delete_booking(booking_id: str):
+    """Delete a booking (admin action)"""
+    # Validate ObjectId
+    try:
+        obj_id = ObjectId(booking_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid booking ID")
+    
+    # Delete booking
+    result = await db.bookings.delete_one({"_id": obj_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    return {
+        "success": True,
+        "message": "Booking deleted successfully"
+    }
 
 # Include the router in the main app
 app.include_router(api_router)
