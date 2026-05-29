@@ -58,7 +58,7 @@ const Testimonials = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-5xl font-bold text-[#3d6e3a] mb-2">500+</div>
+              <div className="text-5xl font-bold text-[#3d6e3a] mb-2">50+</div>
               <div className="text-xl text-gray-700">Happy Customers</div>
             </div>
             <div>
