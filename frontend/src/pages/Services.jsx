@@ -45,9 +45,19 @@ const Services = () => {
               <div key={service.id} className={`grid md:grid-cols-2 gap-12 items-center ${!isEven ? 'md:grid-flow-dense' : ''}`}>
                 {/* Service Image/Icon */}
                 <div className={isEven ? '' : 'md:col-start-2'}>
-                  <div className={`aspect-square bg-gradient-to-br ${serviceColors[service.name]} rounded-3xl shadow-2xl flex items-center justify-center text-white transform hover:scale-105 transition-transform duration-300`}>
-                    <Icon className="w-32 h-32 opacity-90" />
-                  </div>
+                  {service.image ? (
+                    <div className="aspect-square rounded-3xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
+                      <img
+                        src={service.image}
+                        alt={service.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`aspect-square bg-gradient-to-br ${serviceColors[service.name]} rounded-3xl shadow-2xl flex items-center justify-center text-white transform hover:scale-105 transition-transform duration-300`}>
+                      <Icon className="w-32 h-32 opacity-90" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Service Details */}

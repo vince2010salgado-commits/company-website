@@ -16,6 +16,7 @@ export const services = [
     id: 1,
     name: "Gutter Cleaning",
     description: "Professional gutter cleaning to prevent water damage and maintain your property's integrity. We remove debris, check for damage, and ensure proper water flow.",
+    image: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/cdexdreh_image.png",
     features: [
       "Complete debris removal",
       "Downspout flushing",
@@ -27,6 +28,7 @@ export const services = [
     id: 2,
     name: "Landscaping",
     description: "Transform your outdoor spaces with our comprehensive landscaping services. From lawn maintenance to complete landscape design.",
+    image: null,
     features: [
       "Lawn mowing & edging",
       "Trimming & pruning",
@@ -38,6 +40,7 @@ export const services = [
     id: 3,
     name: "Junk Removal",
     description: "Fast and efficient junk removal service for residential properties. We handle everything from small cleanups to large haul-aways.",
+    image: "https://customer-assets.emergentagent.com/job_freshstart-book/artifacts/zk473bsi_image.png",
     features: [
       "Same-day service available",
       "Eco-friendly disposal",
@@ -49,6 +52,7 @@ export const services = [
     id: 4,
     name: "Power Washing",
     description: "Restore your property's curb appeal with professional power washing. We clean driveways, sidewalks, siding, and more.",
+    image: null,
     features: [
       "Driveway cleaning",
       "Roof & gutter washing",
