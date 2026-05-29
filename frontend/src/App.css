@@ -1,0 +1,29 @@
+/* Fresh Start Property Care Styles */
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Smooth transitions for interactive elements */
+button {
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Link transitions */
+a {
+  transition: color 0.3s ease;
+}
