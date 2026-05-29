@@ -108,12 +108,12 @@ const About = () => {
       {/* Community Connection */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Proud Community Members</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-6">Local Student-Athletes</h2>
           <p className="text-xl text-gray-600 mb-8">
-            We're proud supporters of Katy High School Football and active members of the local community. When you choose Fresh Start, you're supporting a local business that gives back.
+            Owen & Noah are proud members of the Katy High School Football team. When you book with Fresh Start, you're supporting two hardworking student-athletes building their futures right here in our community.
           </p>
           <div className="inline-block bg-[#3d6e3a] text-white px-6 py-3 rounded-lg font-semibold">
-            Supporting Katy High School Football
+            Katy High School Football
           </div>
         </div>
       </section>
