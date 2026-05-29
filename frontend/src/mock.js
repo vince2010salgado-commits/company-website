@@ -65,7 +65,7 @@ export const testimonials = [
     rating: 5,
     text: "Owen and Noah did an amazing job on our gutters and driveway! The before and after difference is incredible. Highly recommend!",
     service: "Gutter Cleaning & Power Washing",
-    date: "2025-04-15"
+    date: "2026-05-22"
   },
   {
     id: 2,
@@ -73,7 +73,7 @@ export const testimonials = [
     rating: 5,
     text: "Professional, affordable, and reliable! They transformed our overgrown yard into a beautiful landscape. Will definitely use again.",
     service: "Landscaping",
-    date: "2025-03-22"
+    date: "2026-05-19"
   },
   {
     id: 3,
@@ -81,7 +81,7 @@ export const testimonials = [
     rating: 5,
     text: "Fast response and excellent service! They removed all the junk from our garage renovation. Made the whole process so easy.",
     service: "Junk Removal",
-    date: "2025-05-01"
+    date: "2026-05-24"
   },
   {
     id: 4,
@@ -89,7 +89,7 @@ export const testimonials = [
     rating: 5,
     text: "Best property care service in Katy! Owen and Noah are friendly, professional, and their work quality is outstanding.",
     service: "Power Washing",
-    date: "2025-04-28"
+    date: "2026-05-21"
   },
   {
     id: 5,
@@ -97,7 +97,7 @@ export const testimonials = [
     rating: 5,
     text: "They power washed our entire driveway and sidewalk. Looks brand new! Great pricing and the team was very courteous.",
     service: "Power Washing",
-    date: "2025-05-10"
+    date: "2026-05-26"
   },
   {
     id: 6,
@@ -105,7 +105,7 @@ export const testimonials = [
     rating: 5,
     text: "Excellent gutter cleaning service! They were thorough and even provided photos of their work. Very professional operation.",
     service: "Gutter Cleaning",
-    date: "2025-05-18"
+    date: "2026-05-18"
   }
 ];
 

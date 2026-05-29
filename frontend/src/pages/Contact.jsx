@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { companyInfo } from '../mock';
 import { Link } from 'react-router-dom';
 
@@ -91,34 +91,6 @@ const Contact = () => {
                 <CardContent>
                   <p className="text-lg font-semibold text-gray-900">{companyInfo.location}</p>
                   <p className="text-gray-600 mt-2">and surrounding areas</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#3d6e3a] rounded-lg flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle>Business Hours</CardTitle>
-                      <CardDescription>We work around your schedule</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-700">Monday - Friday:</span>
-                    <span className="font-semibold">7:00 AM - 7:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700">Saturday:</span>
-                    <span className="font-semibold">8:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-700">Sunday:</span>
-                    <span className="font-semibold">9:00 AM - 5:00 PM</span>
-                  </div>
                 </CardContent>
               </Card>
             </div>
