@@ -47,9 +47,9 @@ const Header = () => {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
-            <a href="tel:832-291-9876" className="flex items-center text-[#3d6e3a] font-medium">
+            <a href="tel:832-291-9876 (Noah)" className="flex items-center text-[#3d6e3a] font-medium">
               <Phone className="w-4 h-4 mr-2" />
-              832-291-9876
+              832-291-9876 (Noah)
             </a>
             <Link to="/booking">
               <Button className="bg-[#3d6e3a] hover:bg-[#2d5e2a] text-white">
@@ -85,11 +85,11 @@ const Header = () => {
               ))}
               <div className="pt-4 space-y-3">
                 <a
-                  href="tel:832-291-9876"
+                  href="tel:832-291-9876 (Noah)"
                   className="flex items-center text-[#3d6e3a] font-medium"
                 >
                   <Phone className="w-4 h-4 mr-2" />
-                  832-291-9876
+                  832-291-9876 (Noah)
                 </a>
                 <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full bg-[#3d6e3a] hover:bg-[#2d5e2a] text-white">
