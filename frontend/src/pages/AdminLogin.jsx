@@ -23,7 +23,7 @@ const AdminLogin = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
